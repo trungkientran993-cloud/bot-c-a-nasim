@@ -8,9 +8,9 @@ const {
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMembers
   ],
   partials: [
     Partials.Message,
@@ -19,26 +19,97 @@ const client = new Client({
   ]
 });
 
-const TOKEN = "MTUwMTYyODgzMjU5ODMzMTY0Mw.G303OI.7sehvCuANNOOf30aUmcDyB0MOEPDAJYNqO76D4";
 
-// ID TIN NHẮN ROLE
-const MESSAGE_ID = "ID_TIN_NHAN";
+// ===================================
+// TOKEN RAILWAY
+// ===================================
 
+const TOKEN = process.env.TOKEN;
+
+
+// ===================================
+// ID KÊNH CHỌN ROLE
+// ===================================
+
+const CHANNEL_ID = "1502608926351298651";
+
+let MESSAGE_ID = "";
+
+
+// ===================================
 // ROLE
+// ===================================
+
 const roles = {
 
-  "👦": "1312044213147275304", // Bé trai
-  "👧": "1312044213147275304", // Bé gái
-  "🏳️‍🌈": "1312055990106984448", // LGBT
+  "👦": "1312044213147275304",
+  "👧": "1312044213147275304",
+  "🏳️‍🌈": "1312055990106984448",
 
-  "🤍": "1312058251977953321", // Identity V
-  "💖": "1312058509365346324", // HSR
-  "🩷": "1312058509365346324", // Genshin
-  "🩵": "1312059085432291469", // LOL
-  "🧡": "1312059279171129416", // Liqi
-  "🩶": "1312059498923560980" // Roblox
+  "🤍": "1312058251977953321",
+  "💖": "1312058509365346324",
+  "🩷": "1312058509365346324",
+  "🩵": "1312059085432291469",
+  "🧡": "1312059279171129416",
+  "🩶": "1312059498923560980"
 
 };
+
+
+// ===================================
+// BOT ONLINE
+// ===================================
+
+client.once(Events.ClientReady, async () => {
+
+  console.log(`✅ ${client.user.tag} online`);
+
+  try {
+
+    const channel =
+      await client.channels.fetch(CHANNEL_ID);
+
+    // GỬI TIN NHẮN ROLE
+    const msg = await channel.send(`
+# 🎭 Chọn role của bạn
+
+## 👤 Giới tính
+👦 Bé trai
+👧 Bé gái
+🏳️‍🌈 Bé hướng lung tung
+
+## 🎮 Game
+🤍 Identity V
+💖 Honkai Star Rail
+🩷 Genshin Impact
+🩵 LOL
+🧡 Liqi
+🩶 Roblox
+`);
+
+    MESSAGE_ID = msg.id;
+
+    // THẢ REACTION
+    await msg.react("👦");
+    await msg.react("👧");
+    await msg.react("🏳️‍🌈");
+
+    await msg.react("🤍");
+    await msg.react("💖");
+    await msg.react("🩷");
+    await msg.react("🩵");
+    await msg.react("🧡");
+    await msg.react("🩶");
+
+    console.log("✅ MESSAGE ID:", MESSAGE_ID);
+
+  } catch (err) {
+
+    console.log("❌ Lỗi gửi role:", err);
+
+  }
+
+});
 
 
 // ===================================
@@ -49,20 +120,28 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
   if (user.bot) return;
 
-  if (reaction.partial)
-    await reaction.fetch();
+  try {
 
-  if (reaction.message.id !== MESSAGE_ID)
-    return;
+    if (reaction.partial)
+      await reaction.fetch();
 
-  const roleId = roles[reaction.emoji.name];
+    if (reaction.message.id !== MESSAGE_ID)
+      return;
 
-  if (!roleId) return;
+    const roleId = roles[reaction.emoji.name];
 
-  const member =
-    await reaction.message.guild.members.fetch(user.id);
+    if (!roleId) return;
 
-  await member.roles.add(roleId);
+    const member =
+      await reaction.message.guild.members.fetch(user.id);
+
+    await member.roles.add(roleId);
+
+  } catch (err) {
+
+    console.log("❌ Lỗi add role:", err);
+
+  }
 
 });
 
@@ -75,32 +154,34 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
 
   if (user.bot) return;
 
-  if (reaction.partial)
-    await reaction.fetch();
+  try {
 
-  if (reaction.message.id !== MESSAGE_ID)
-    return;
+    if (reaction.partial)
+      await reaction.fetch();
 
-  const roleId = roles[reaction.emoji.name];
+    if (reaction.message.id !== MESSAGE_ID)
+      return;
 
-  if (!roleId) return;
+    const roleId = roles[reaction.emoji.name];
 
-  const member =
-    await reaction.message.guild.members.fetch(user.id);
+    if (!roleId) return;
 
-  await member.roles.remove(roleId);
+    const member =
+      await reaction.message.guild.members.fetch(user.id);
+
+    await member.roles.remove(roleId);
+
+  } catch (err) {
+
+    console.log("❌ Lỗi remove role:", err);
+
+  }
 
 });
 
 
 // ===================================
-// BOT ONLINE
+// LOGIN
 // ===================================
-
-client.once(Events.ClientReady, async () => {
-
-  console.log(`✅ ${client.user.tag} online`);
-
-});
 
 client.login(TOKEN);
